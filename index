@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CommuterConnect</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
+    h1 { color: #2c3e50; }
+    form { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+    input, select, button { padding: 10px; font-size: 16px; }
+    button { background-color: #3498db; color: white; border: none; cursor: pointer; border-radius: 4px; }
+    button:hover { background-color: #2980b9; }
+    .card { border: 1px solid #ddd; padding: 16px; margin-top: 12px; border-radius: 6px; background: #f9f9f9; }
+  </style>
+</head>
+<body>
+  <h1>🚗 CommuterConnect</h1>
+  <p>Find fellow college commuters to carpool with!</p>
+
+  <form id="commuteForm">
+    <input type="text" id="name" placeholder="Your Name" required />
+    <input type="text" id="neighborhood" placeholder="Your Neighborhood (e.g., North District)" required />
+    <select id="role">
+      <option value="Rider">Rider (Looking for a ride)</option>
+      <option value="Driver">Driver (Can offer a ride)</option>
+    </select>
+    <input type="text" id="schedule" placeholder="Schedule (e.g., Mon/Wed/Fri 9:00 AM - 3:00 PM)" required />
+    <button type="submit">Find Carpool Matches</button>
+  </form>
+
+  <h2>Matching Profiles & AI Recommendations</h2>
+  <div id="results">Submit the form above to analyze database profiles.</div>
+
+  <script>
+    document.getElementById('commuteForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = "<em>Analyzing database and calculating AI matches...</em>";
+
+      const payload = {
+        name: document.getElementById('name').value,
+        neighborhood: document.getElementById('neighborhood').value,
+        role: document.getElementById('role').value,
+        schedule: document.getElementById('schedule').value
+      };
+
+      try {
+        const response = await fetch('/api/match', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        
+        resultsDiv.innerHTML = `
+          <div class="card">
+            <h3>🤖 AI Recommendation</h3>
+            <p>${data.ai_advice}</p>
+          </div>
+          <h3>Compatible Student Matches:</h3>
+        `;
+
+        data.matches.forEach(match => {
+          resultsDiv.innerHTML += `
+            <div class="card">
+              <strong>${match.name}</strong> (${match.role})<br/>
+              📍 <em>${match.neighborhood}</em><br/>
+              📅 ${match.schedule}<br/>
+              <strong>Match Score:</strong> ${match.score}%
+            </div>
+          `;
+        });
+      } catch (err) {
+        resultsDiv.innerHTML = "<p style='color:red;'>Error fetching matches. Ensure your back-end server is running.</p>";
+      }
+    });
+  </script>
+</body>
+</html>
